@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: ar_db
+      MYSQL_USER: ar_user
+      MYSQL_PASSWORD: ar_pass
+    ports:
+      - '3306:3306'
+    volumes:
+      - db_data:/var/lib/mysql
+
+  server:
+    build: ./server
+    restart: unless-stopped
+    environment:
+      - DB_HOST=db
+      - DB_USER=ar_user
+      - DB_PASS=ar_pass
+      - DB_NAME=ar_db
+      - JWT_SECRET=change-me
+    ports:
+      - '8000:8000'
+    depends_on:
+      - db
+
+volumes:
+  db_data:

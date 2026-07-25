@@ -1,0 +1,54 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const session = require('express-session');
+const app = express();
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(session({
+  secret: 'your-secret-key',
+  resave: false,
+  saveUninitialized: true
+}));
+
+app.set('view engine', 'ejs');
+app.use(express.static('public'));
+
+// Mock user database
+const users = {
+  'user@example.com': 'password123'
+};
+
+// Login page
+app.get('/login', (req, res) => {
+  res.render('login');
+});
+
+// Handle login
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+  
+  if (users[email] && users[email] === password) {
+    req.session.user = email;
+    res.redirect('/dashboard');
+  } else {
+    res.render('login', { error: 'Invalid email or password' });
+  }
+});
+
+// Dashboard
+app.get('/dashboard', (req, res) => {
+  if (!req.session.user) {
+    return res.redirect('/login');
+  }
+  res.render('dashboard', { user: req.session.user });
+});
+
+// Logout
+app.get('/logout', (req, res) => {
+  req.session.destroy();
+  res.redirect('/login');
+});
+
+app.listen(3000, () => {
+  console.log('Server running on http://localhost:3000');
+});

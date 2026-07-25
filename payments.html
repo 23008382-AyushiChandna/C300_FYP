@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Management | TSH Synergy</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="page-shell">
+  <main class="page-main">
+    <header class="page-header">
+      <div class="page-title-group">
+        <span class="eyebrow">Payment Management</span>
+        <h1>Payment Management</h1>
+        <p class="page-subtitle">Record cash receipts, track payment history and reconcile invoices.</p>
+      </div>
+      <nav class="section-nav">
+        <a href="dashboard.html" class="nav-link">Dashboard</a>
+        <a href="customers.html" class="nav-link">Customers</a>
+        <a href="payments.html" class="nav-link active">Payments</a>
+        <a href="invoice.html" class="nav-link">Invoices</a>
+        <a href="reports.html" class="nav-link">Reports</a>
+        <a href="#" class="nav-link" data-action="logout">Logout</a>
+      </nav>
+    </header>
+
+    <section class="page-panel action-bar">
+      <div class="filter-group">
+        <label class="sr-only" for="paymentSearch">Search payments</label>
+        <input id="paymentSearch" class="search-input" type="search" placeholder="Search invoice, customer or reference" />
+      </div>
+      <div class="action-group">
+        <button class="btn btn-secondary" id="exportPaymentCsv">Export CSV</button>
+        <button class="btn btn-primary" id="recordPaymentBtn">Record Payment</button>
+      </div>
+    </section>
+
+    <section class="card-grid stats-grid">
+      <article class="data-card">
+        <div class="card-label">Payments Received</div>
+        <div class="card-value" id="paymentCount">128</div>
+      </article>
+      <article class="data-card">
+        <div class="card-label">Collected This Month</div>
+        <div class="card-value">$412,500</div>
+      </article>
+      <article class="data-card">
+        <div class="card-label">Average Payment Time</div>
+        <div class="card-value">14 days</div>
+      </article>
+      <article class="data-card">
+        <div class="card-label">Reconciled</div>
+        <div class="card-value">96%</div>
+      </article>
+    </section>
+
+    <section class="table-card">
+      <div class="table-card-header">
+        <div>
+          <h2>Recent Payment Activity</h2>
+          <p class="table-subtitle">Review the latest cash receipts and apply payments against customer invoices.</p>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="primary-table">
+          <thead>
+            <tr>
+              <th>Invoice</th>
+              <th>Customer</th>
+              <th>Paid Amount</th>
+              <th>Payment Date</th>
+              <th>Method</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="paymentTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="table-card">
+      <div class="table-card-header">
+        <div>
+          <h2>Payment Entry</h2>
+          <p class="table-subtitle">Capture new payment details or reconcile payments with invoices.</p>
+        </div>
+      </div>
+      <form id="paymentForm" class="modal-body">
+        <div class="form-grid">
+          <label class="form-field">
+            <span>Invoice Number</span>
+            <input id="invoiceNo" class="input-field" type="text" placeholder="INV-2026-014" required />
+          </label>
+          <label class="form-field">
+            <span>Amount Paid</span>
+            <input id="amountPaid" class="input-field" type="number" placeholder="0.00" min="0" step="0.01" required />
+          </label>
+          <label class="form-field">
+            <span>Payment Date</span>
+            <input id="paymentDate" class="input-field" type="date" required />
+          </label>
+          <label class="form-field">
+            <span>Payment Method</span>
+            <select id="paymentMethod" class="select-field">
+              <option>Bank Transfer</option>
+              <option>Credit Card</option>
+              <option>Cheque</option>
+              <option>Cash</option>
+            </select>
+          </label>
+          <label class="form-field full-width">
+            <span>Notes</span>
+            <textarea id="paymentNotes" class="textarea-field" rows="3" placeholder="Payment reference or reconciliation notes"></textarea>
+          </label>
+        </div>
+        <div class="action-group" style="justify-content:flex-end; margin-top: 16px;">
+          <button type="button" class="btn btn-secondary" id="resetPaymentForm">Reset</button>
+          <button type="submit" class="btn btn-primary">Save Payment</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="payments.js"></script>
+  <script src="common.js"></script>
+  <script>
+    const paymentForm = document.getElementById('paymentForm');
+    const paymentSearch = document.getElementById('paymentSearch');
+    const paymentTable = document.getElementById('paymentTable');
+
+    let paymentsData = [
+      { invoiceNo: 'INV-2026-013', customer: 'Solstice Media', amount: 7838, date: '2026-05-14', method: 'Bank Transfer', status: 'Received' },
+      { invoiceNo: 'INV-2026-010', customer: 'Emerald Retail', amount: 5995, date: '2026-05-11', method: 'Credit Card', status: 'Received' },
+      { invoiceNo: 'INV-2026-008', customer: 'Atlas Manufacturing', amount: 6682, date: '2026-04-27', method: 'Bank Transfer', status: 'Reconciled' }
+    ];
+
+    function formatMoney(value) {
+      return `$${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    function renderPaymentRows(data) {
+      paymentTable.innerHTML = data.map(payment => `
+        <tr>
+          <td>${payment.invoiceNo}</td>
+          <td>${payment.customer}</td>
+          <td>${formatMoney(payment.amount)}</td>
+          <td>${payment.date}</td>
+          <td>${payment.method}</td>
+          <td><span class="badge-status status-paid">${payment.status}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    paymentSearch.addEventListener('input', () => {
+      const query = paymentSearch.value.toLowerCase();
+      renderPaymentRows(paymentsData.filter(p => p.invoiceNo.toLowerCase().includes(query) || p.customer.toLowerCase().includes(query)));
+    });
+
+    document.getElementById('recordPaymentBtn').addEventListener('click', () => {
+      document.getElementById('invoiceNo').focus();
+    });
+
+    document.getElementById('resetPaymentForm').addEventListener('click', () => {
+      paymentForm.reset();
+    });
+
+    paymentForm.addEventListener('submit', event => {
+      event.preventDefault();
+      const newPayment = {
+        invoiceNo: document.getElementById('invoiceNo').value,
+        customer: 'Customer name',
+        amount: Number(document.getElementById('amountPaid').value),
+        date: document.getElementById('paymentDate').value,
+        method: document.getElementById('paymentMethod').value,
+        status: 'Received'
+      };
+      paymentsData = [newPayment, ...paymentsData];
+      renderPaymentRows(paymentsData);
+      paymentForm.reset();
+      document.getElementById('invoiceNo').focus();
+    });
+
+    document.getElementById('exportPaymentCsv').addEventListener('click', () => {
+      alert('Export started.');
+    });
+
+    renderPaymentRows(paymentsData);
+  </script>
+</body>
+</html>

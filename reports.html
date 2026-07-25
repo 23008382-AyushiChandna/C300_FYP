@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reports & Analytics | TSH Synergy</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="page-shell">
+  <main class="page-main">
+    <header class="page-header">
+      <div class="page-title-group">
+        <span class="eyebrow">Reports & Analytics</span>
+        <h1>Reports & Analytics</h1>
+        <p class="page-subtitle">Financial insights and receivables performance metrics.</p>
+      </div>
+      <nav class="section-nav">
+        <a href="dashboard.html" class="nav-link">Dashboard</a>
+        <a href="customers.html" class="nav-link">Customers</a>
+        <a href="invoice.html" class="nav-link">Invoices</a>
+        <a href="payments.html" class="nav-link">Payments</a>
+        <a href="reports.html" class="nav-link active">Reports</a>
+        <a href="#" class="nav-link" data-action="logout">Logout</a>
+      </nav>
+    </header>
+
+    <section class="page-panel action-bar report-actions">
+      <div class="filter-group">
+        <label class="sr-only" for="dateRange">Date range</label>
+        <input id="dateRange" class="search-input" type="text" placeholder="Date range" />
+        <select id="customerFilter" class="select-field">
+          <option value="">All customers</option>
+        </select>
+        <select id="statusFilter" class="select-field">
+          <option value="paid">Paid</option>
+          <option value="partial" selected>Partial</option>
+          <option value="overdue">Overdue</option>
+        </select>
+      </div>
+      <div class="action-group">
+        <button class="btn btn-secondary">Export PDF</button>
+        <button class="btn btn-secondary">Export Excel</button>
+        <button id="generateReportBtn" class="btn btn-primary">Generate Report</button>
+      </div>
+    </section>
+
+    <section class="card-grid stats-grid">
+      <article class="data-card">
+        <div class="card-label">Total Receivables</div>
+        <div class="card-value" id="totalOutstanding">$0.00</div>
+      </article>
+      <article class="data-card">
+        <div class="card-label">Total Collected</div>
+        <div class="card-value" id="currentAmount">$0.00</div>
+      </article>
+      <article class="data-card">
+        <div class="card-label">Overdue Amount</div>
+        <div class="card-value" id="overdueAmount">$0.00</div>
+      </article>
+      <article class="data-card">
+        <div class="card-label">Collection Efficiency</div>
+        <div class="card-value" id="collectionEfficiency">0%</div>
+      </article>
+    </section>
+
+    <section class="chart-grid">
+      <article class="chart-card">
+        <div class="chart-header">
+          <h3>Receivables Ageing Distribution</h3>
+        </div>
+        <div class="donut-chart">
+          <span class="donut-label">Ageing</span>
+          <div class="donut-segment current"></div>
+          <div class="donut-segment days30"></div>
+          <div class="donut-segment days60"></div>
+          <div class="donut-segment days90"></div>
+        </div>
+        <div class="chart-legend">
+          <span><span class="legend-swatch current"></span>Current</span>
+          <span><span class="legend-swatch days30"></span>31-60</span>
+          <span><span class="legend-swatch days60"></span>61-90</span>
+          <span><span class="legend-swatch days90"></span>90+</span>
+        </div>
+      </article>
+      <article class="chart-card">
+        <div class="chart-header">
+          <h3>Monthly Collection Trend</h3>
+        </div>
+        <div id="monthlyCollectionChart" class="bar-chart">
+          <div class="bar" style="height:0%" title="Loading"></div>
+        </div>
+      </article>
+      <article class="chart-card">
+        <div class="chart-header">
+          <h3>Outstanding Balance Trend</h3>
+        </div>
+        <div class="line-chart-placeholder" id="outstandingTrend">Loading...</div>
+      </article>
+      <article class="chart-card">
+        <div class="chart-header">
+          <h3>Collection Performance</h3>
+        </div>
+        <div class="area-chart-placeholder" id="collectionPerformance">Loading...</div>
+      </article>
+    </section>
+
+    <section class="table-card">
+      <div class="table-card-header">
+        <div>
+          <h2>Invoices</h2>
+          <p class="table-subtitle">View invoices filtered by status (paid, partial, or overdue).</p>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="primary-table">
+          <thead>
+            <tr>
+              <th>Invoice Number</th>
+              <th>Customer</th>
+              <th>Due Date</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="overdueTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="report-sidebar">
+      <div class="report-panel">
+        <h3>Top Outstanding Customers</h3>
+        <div class="top-customers" id="topCustomers">
+          <p>Loading...</p>
+        </div>
+      </div>
+      <div class="report-panel ai-panel">
+        <h3>AI Insights</h3>
+        <p id="aiSummary">Loading insights...</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="reports.js"></script>
+  <script src="common.js"></script>
+</body>
+</html>
