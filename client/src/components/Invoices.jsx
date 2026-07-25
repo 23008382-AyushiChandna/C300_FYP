@@ -173,6 +173,346 @@ export default function Invoices() {
     setSelectedInvoice(invoice);
   };
 
+  const handlePrintInvoice = (invoice) => {
+    const subtotal = Number(invoice.amount || 0);
+    const gst = Math.round(subtotal * 0.09 * 100) / 100;
+    const total = subtotal + gst;
+    const paid = Number(invoice.paid || 0);
+    const outstanding = total - paid;
+
+    const printWindow = window.open('', '_blank');
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Invoice ${invoice.invoiceNumber}</title>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          body {
+            font-family: 'Arial', sans-serif;
+            background: white;
+            padding: 40px;
+            color: #333;
+            line-height: 1.6;
+          }
+          .invoice-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+          }
+          .header {
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+          }
+          .header-left h1 {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #000;
+          }
+          .header-left p {
+            font-size: 14px;
+            color: #666;
+          }
+          .header-right {
+            text-align: right;
+          }
+          .header-right p {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0066cc;
+          }
+          .info-section {
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+          }
+          .info-block {
+            margin-bottom: 20px;
+          }
+          .info-label {
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #666;
+            margin-bottom: 8px;
+          }
+          .info-content {
+            font-size: 14px;
+          }
+          .company-info {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 5px;
+          }
+          .company-details {
+            font-size: 13px;
+            color: #555;
+          }
+          .bill-to-section {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+          }
+          .bill-to-section .info-label {
+            margin-bottom: 10px;
+          }
+          .bill-to-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+          }
+          table {
+            width: 100%;
+            margin-bottom: 30px;
+            border-collapse: collapse;
+          }
+          thead {
+            background: #f0f0f0;
+            border-bottom: 2px solid #333;
+          }
+          th {
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+          }
+          .text-right {
+            text-align: right;
+          }
+          tbody tr:last-child td {
+            border-bottom: none;
+          }
+          .summary {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 30px;
+          }
+          .summary-box {
+            width: 350px;
+            background: #f9f9f9;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+          }
+          .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+          }
+          .summary-row.total {
+            border-top: 1px solid #ddd;
+            padding-top: 12px;
+            margin-top: 12px;
+            font-weight: bold;
+            font-size: 16px;
+          }
+          .summary-row.outstanding {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            padding: 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            color: #92400e;
+          }
+          .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+          }
+          .status-paid {
+            background: #d1fae5;
+            color: #065f46;
+          }
+          .status-partial {
+            background: #fef3c7;
+            color: #92400e;
+          }
+          .status-overdue {
+            background: #fee2e2;
+            color: #991b1b;
+          }
+          .notes-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+          }
+          .notes-title {
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #666;
+            margin-bottom: 10px;
+          }
+          .notes-content {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #555;
+          }
+          .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+          }
+          @media print {
+            body {
+              padding: 0;
+            }
+            .no-print {
+              display: none;
+            }
+            @page {
+              size: A4;
+              margin: 0;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="invoice-container">
+          <!-- Header -->
+          <div class="header">
+            <div class="header-left">
+              <h1>INVOICE</h1>
+              <p>Professional Invoice Document</p>
+            </div>
+            <div class="header-right">
+              <p>${invoice.invoiceNumber || 'N/A'}</p>
+            </div>
+          </div>
+
+          <!-- Company & Invoice Info -->
+          <div class="info-section">
+            <div>
+              <div class="info-label">Invoice From</div>
+              <div class="company-info">Your Company</div>
+              <div class="company-details">
+                123 Business Street<br>
+                Singapore 123456<br>
+                contact@company.sg
+              </div>
+            </div>
+            <div>
+              <div class="info-label">Invoice Details</div>
+              <div class="info-content">
+                <strong>Issued:</strong> ${new Date(invoice.issueDate).toLocaleDateString()}<br>
+                <strong>Due:</strong> ${new Date(invoice.dueDate).toLocaleDateString()}<br>
+                <div style="margin-top: 10px;">
+                  <span class="status-badge status-${invoice.status || 'partial'}">${(invoice.status || 'partial').toUpperCase()}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bill To -->
+          <div class="bill-to-section">
+            <div class="info-label">Bill To</div>
+            <div class="bill-to-name">${invoice.customerName || 'N/A'}</div>
+            <div class="company-details">Customer Account</div>
+          </div>
+
+          <!-- Line Items -->
+          <table>
+            <thead>
+              <tr>
+                <th>Description</th>
+                <th class="text-right">Quantity</th>
+                <th class="text-right">Unit Price</th>
+                <th class="text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>${invoice.description || 'Service'}</td>
+                <td class="text-right">1</td>
+                <td class="text-right">$${subtotal.toLocaleString('en-SG', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td class="text-right"><strong>$${subtotal.toLocaleString('en-SG', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Summary -->
+          <div class="summary">
+            <div class="summary-box">
+              <div class="summary-row">
+                <span>Subtotal</span>
+                <span>$${subtotal.toLocaleString('en-SG', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+              </div>
+              <div class="summary-row">
+                <span>GST (9%)</span>
+                <span>$${gst.toLocaleString('en-SG', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+              </div>
+              <div class="summary-row total">
+                <span>Total Due</span>
+                <span>$${total.toLocaleString('en-SG', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+              </div>
+              <div class="summary-row">
+                <span>Amount Paid</span>
+                <span style="color: #16a34a;">$${paid.toLocaleString('en-SG', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+              </div>
+              <div class="summary-row outstanding">
+                <span>Outstanding</span>
+                <span>$${outstanding.toLocaleString('en-SG', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+              </div>
+            </div>
+          </div>
+
+          ${invoice.notes ? `
+          <!-- Notes -->
+          <div class="notes-section">
+            <div class="notes-title">Notes</div>
+            <div class="notes-content">${invoice.notes}</div>
+          </div>
+          ` : ''}
+
+          <!-- Footer -->
+          <div class="footer">
+            <p>Thank you for your business | This is an electronically generated document</p>
+            <p style="margin-top: 8px;">For inquiries, please contact: contact@company.sg</p>
+          </div>
+        </div>
+
+        <script>
+          window.print();
+        </script>
+      </body>
+      </html>
+    `;
+    
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -264,31 +604,125 @@ export default function Invoices() {
       </div>
 
       {selectedInvoice && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedInvoice(null)}>
-          <div className="bg-card rounded-lg border border-border w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-6 border-b border-border">
-              <div>
-                <h3 className="text-lg font-bold">Invoice Details</h3>
-                <p className="text-sm text-textSecondary mt-1">Detailed breakdown for the selected invoice</p>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto invoice-modal" onClick={() => setSelectedInvoice(null)}>
+          <div className="bg-white text-black rounded-lg shadow-2xl w-full max-w-4xl my-8" onClick={(e) => e.stopPropagation()}>
+            {/* Close Button */}
+            <div className="absolute top-4 right-4">
+              <button onClick={() => setSelectedInvoice(null)} className="text-gray-500 hover:text-gray-700 text-3xl leading-none p-2">&times;</button>
+            </div>
+
+            {/* Document Content */}
+            <div className="p-12">
+              {/* Header Section */}
+              <div className="mb-12 pb-8 border-b-2 border-gray-300">
+                <div className="flex justify-between items-start mb-8">
+                  <div>
+                    <h1 className="text-4xl font-bold text-gray-900">INVOICE</h1>
+                    <p className="text-sm text-gray-600 mt-1">Professional Invoice Document</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-semibold text-primary">{selectedInvoice.invoiceNumber}</p>
+                  </div>
+                </div>
+
+                {/* Company Info */}
+                <div className="grid grid-cols-2 gap-8">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-600 uppercase tracking-widest mb-2">Invoice From</p>
+                    <p className="font-semibold text-lg text-gray-900">Your Company</p>
+                    <p className="text-sm text-gray-600">123 Business Street</p>
+                    <p className="text-sm text-gray-600">Singapore 123456</p>
+                    <p className="text-sm text-gray-600 mt-2">contact@company.sg</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-semibold text-gray-600 uppercase tracking-widest mb-2">Invoice Details</p>
+                    <div className="space-y-1 text-sm">
+                      <p><span className="font-semibold">Issued:</span> {formatDateLabel(selectedInvoice.issueDate)}</p>
+                      <p><span className="font-semibold">Due:</span> {formatDateLabel(selectedInvoice.dueDate)}</p>
+                      <p className="mt-3"><span className={`inline-block px-3 py-1 rounded text-xs font-bold ${selectedInvoice.status === 'paid' ? 'bg-green-100 text-green-800' : selectedInvoice.status === 'overdue' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>{selectedInvoice.status ? selectedInvoice.status.toUpperCase() : ''}</span></p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <button onClick={() => setSelectedInvoice(null)} className="text-textSecondary hover:text-textPrimary text-2xl leading-none">&times;</button>
+
+              {/* Bill To Section */}
+              <div className="mb-12">
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-widest mb-4">Bill To</p>
+                <div className="bg-gray-50 p-6 rounded border border-gray-200">
+                  <p className="font-semibold text-lg text-gray-900">{selectedInvoice.customerName || '-'}</p>
+                  <p className="text-sm text-gray-600 mt-2">Customer Account</p>
+                </div>
+              </div>
+
+              {/* Line Items Table */}
+              <div className="mb-12">
+                <table className="w-full mb-6">
+                  <thead>
+                    <tr className="bg-gray-100 border-b-2 border-gray-300">
+                      <th className="text-left p-4 font-semibold text-gray-900 text-sm">Description</th>
+                      <th className="text-right p-4 font-semibold text-gray-900 text-sm">Quantity</th>
+                      <th className="text-right p-4 font-semibold text-gray-900 text-sm">Unit Price</th>
+                      <th className="text-right p-4 font-semibold text-gray-900 text-sm">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-gray-200 hover:bg-gray-50">
+                      <td className="p-4 text-sm text-gray-900">{selectedInvoice.description || 'Service'}</td>
+                      <td className="text-right p-4 text-sm text-gray-900">1</td>
+                      <td className="text-right p-4 text-sm text-gray-900">{formatMoney(selectedInvoice.amount)}</td>
+                      <td className="text-right p-4 text-sm font-semibold text-gray-900">{formatMoney(selectedInvoice.amount)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Summary Section */}
+              <div className="flex justify-end mb-12">
+                <div className="w-80">
+                  <div className="space-y-3 bg-gray-50 p-6 rounded border border-gray-200">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Subtotal</span>
+                      <span className="font-semibold text-gray-900">{formatMoney(selectedInvoice.amount)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">GST (9%)</span>
+                      <span className="font-semibold text-gray-900">{formatMoney(Number(selectedInvoice.amount || 0) * 0.09)}</span>
+                    </div>
+                    <div className="border-t border-gray-300 pt-3 flex justify-between">
+                      <span className="font-semibold text-gray-900">Total Due</span>
+                      <span className="text-xl font-bold text-primary">{formatMoney(Number(selectedInvoice.amount || 0) * 1.09)}</span>
+                    </div>
+                    <div className="border-t border-gray-300 pt-3 flex justify-between">
+                      <span className="text-sm text-gray-600">Amount Paid</span>
+                      <span className="text-sm font-semibold text-green-600">{formatMoney(selectedInvoice.paid || 0)}</span>
+                    </div>
+                    <div className="bg-yellow-50 border border-yellow-200 rounded p-3 flex justify-between">
+                      <span className="text-sm font-semibold text-gray-900">Outstanding</span>
+                      <span className="text-sm font-bold text-yellow-700">{formatMoney((Number(selectedInvoice.amount || 0) * 1.09) - Number(selectedInvoice.paid || 0))}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes Section */}
+              {selectedInvoice.notes && (
+                <div className="mb-12 pb-8 border-t border-gray-300 pt-8">
+                  <p className="text-xs font-semibold text-gray-600 uppercase tracking-widest mb-3">Notes</p>
+                  <p className="text-sm text-gray-700 bg-gray-50 p-4 rounded border border-gray-200">{selectedInvoice.notes}</p>
+                </div>
+              )}
+
+              {/* Footer */}
+              <div className="border-t-2 border-gray-300 pt-8 text-center text-xs text-gray-500">
+                <p>Thank you for your business | This is an electronically generated document</p>
+                <p className="mt-2">For inquiries, please contact: contact@company.sg</p>
+              </div>
             </div>
-            <div className="p-6 space-y-3">
-              <p><span className="text-textSecondary">Invoice Number:</span> <span className="font-semibold">{selectedInvoice.invoiceNumber || '-'}</span></p>
-              <p><span className="text-textSecondary">Customer:</span> <span className="font-semibold">{selectedInvoice.customerName || '-'}</span></p>
-              <p><span className="text-textSecondary">Status:</span> <span className="font-semibold uppercase">{selectedInvoice.status || '-'}</span></p>
-              <p><span className="text-textSecondary">Issue Date:</span> <span className="font-semibold">{formatDateLabel(selectedInvoice.issueDate)}</span></p>
-              <p><span className="text-textSecondary">Due Date:</span> <span className="font-semibold">{formatDateLabel(selectedInvoice.dueDate)}</span></p>
-              <p><span className="text-textSecondary">Description:</span> <span className="font-semibold">{selectedInvoice.description || '-'}</span></p>
-              <p><span className="text-textSecondary">Notes:</span> <span className="font-semibold">{selectedInvoice.notes || '-'}</span></p>
-              <p><span className="text-textSecondary">Subtotal:</span> <span className="font-semibold">{formatMoney(selectedInvoice.amount)}</span></p>
-              <p><span className="text-textSecondary">GST (9%):</span> <span className="font-semibold">{formatMoney(Number(selectedInvoice.amount || 0) * 0.09)}</span></p>
-              <p><span className="text-textSecondary">Total:</span> <span className="font-semibold">{formatMoney(Number(selectedInvoice.amount || 0) * 1.09)}</span></p>
-              <p><span className="text-textSecondary">Paid:</span> <span className="font-semibold">{formatMoney(selectedInvoice.paid)}</span></p>
-              <p><span className="text-textSecondary">Outstanding:</span> <span className="font-semibold">{formatMoney((Number(selectedInvoice.amount || 0) * 1.09) - Number(selectedInvoice.paid || 0))}</span></p>
-            </div>
-            <div className="p-4 border-t border-border flex justify-end">
-              <button className="px-4 py-2 bg-background border border-border rounded hover:bg-opacity-80" onClick={() => setSelectedInvoice(null)}>Close</button>
+
+            {/* Action Buttons */}
+            <div className="bg-gray-50 p-6 border-t border-gray-200 rounded-b-lg flex justify-end gap-3 print-hide">
+              <button onClick={() => handlePrintInvoice(selectedInvoice)} className="px-4 py-2 bg-gray-200 text-gray-900 rounded hover:bg-gray-300 font-medium text-sm">Print / PDF</button>
+              <button onClick={() => setSelectedInvoice(null)} className="px-4 py-2 bg-primary text-white rounded hover:opacity-80 font-medium text-sm">Close</button>
             </div>
           </div>
         </div>
