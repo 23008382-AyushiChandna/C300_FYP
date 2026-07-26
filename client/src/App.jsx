@@ -5,6 +5,7 @@ import Dashboard from './components/Dashboard'
 import Customers from './components/Customers'
 import Invoices from './components/Invoices'
 import Payments from './components/Payments'
+import Chatbot from './components/Chatbot'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:1573';
 const TOKEN_KEY = 'tsh_token';
@@ -144,7 +145,13 @@ function ReportsPage() {
     status: 'paid',
     customer: 'all'
   };
-
+  
+  const [filters, setFilters] = React.useState(defaultFilters);
+  const [appliedFilters, setAppliedFilters] = React.useState(defaultFilters);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState('');
+  const [allInvoices, setAllInvoices] = React.useState([]);
+  const [allPayments, setAllPayments] = React.useState([]);
   const [reportData, setReportData] = React.useState({
     totalOutstanding: 0,
     totalCollected: 0,
@@ -158,12 +165,6 @@ function ReportsPage() {
     monthlySales: [],
     agingRows: []
   });
-  const [allInvoices, setAllInvoices] = React.useState([]);
-  const [allPayments, setAllPayments] = React.useState([]);
-  const [filters, setFilters] = React.useState(defaultFilters);
-  const [appliedFilters, setAppliedFilters] = React.useState(defaultFilters);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState('');
 
   const customerOptions = React.useMemo(() => {
     const names = allInvoices
@@ -579,9 +580,11 @@ function ReportsPage() {
   )
 }
 
+
 function DashboardLayout({ user, onLogout, children }) {
   return (
     <div className="min-h-screen bg-background text-textPrimary">
+      <Chatbot />
       <nav className="bg-card border-b border-border p-4 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex gap-6">
@@ -660,6 +663,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <Chatbot />
       <Routes>
         <Route path="/dashboard" element={<DashboardLayout user={user} onLogout={handleLogout}><DashboardPage user={user} onLogout={handleLogout} /></DashboardLayout>} />
         <Route path="/customers" element={<DashboardLayout user={user} onLogout={handleLogout}><CustomersPage user={user} onLogout={handleLogout} /></DashboardLayout>} />
