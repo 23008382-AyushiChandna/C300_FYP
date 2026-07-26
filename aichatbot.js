@@ -2,7 +2,21 @@
 
 document.addEventListener("DOMContentLoaded", function () {
     createAIWidget();
+    initN8nChat();
 });
+
+async function initN8nChat() {
+    try {
+        const module = await import('https://cdn.jsdelivr.net/npm/@n8n/chat/dist/chat.bundle.es.js');
+        if (module && module.createChat) {
+            module.createChat({
+                webhookUrl: 'https://n8ngc.codeblazar.org/webhook/7a06a102-41d2-4040-bf21-f864a122b53a/chat'
+            });
+        }
+    } catch (e) {
+        console.error('Failed to load n8n chat:', e);
+    }
+}
 
 function createAIWidget() {
     var widget = document.createElement("div");
