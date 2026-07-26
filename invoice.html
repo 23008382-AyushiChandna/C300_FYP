@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoice Management | TSH Synergy</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="page-shell">
+  <main class="page-main">
+    <header class="page-header">
+      <div class="page-title-group">
+        <span class="eyebrow">Invoice Management</span>
+        <h1>Invoice Management</h1>
+        <p class="page-subtitle">Create, monitor and manage customer invoices.</p>
+      </div>
+      <nav class="section-nav">
+        <a href="dashboard.html" class="nav-link">Dashboard</a>
+        <a href="customers.html" class="nav-link">Customers</a>
+        <a href="invoice.html" class="nav-link active">Invoices</a>
+        <a href="payments.html" class="nav-link">Payments</a>
+        <a href="reports.html" class="nav-link">Reports</a>
+        <a href="#" class="nav-link" data-action="logout">Logout</a>
+      </nav>
+    </header>
+
+    <section class="page-panel action-bar">
+      <div class="filter-group">
+        <label class="sr-only" for="invoiceSearch">Search invoice</label>
+        <input id="invoiceSearch" class="search-input" type="search" placeholder="Search invoice number or customer" />
+      </div>
+      <div class="action-group">
+        <button id="newInvoiceButton" class="btn btn-primary">Create Invoice</button>
+      </div>
+    </section>
+
+    <section class="card-grid stats-grid">
+      <article class="data-card">
+        <div class="card-label">Total Invoice Value</div>
+        <div class="card-value">$1.24M</div>
+      </article>
+      <article class="data-card">
+        <div class="card-label">Outstanding Invoices</div>
+        <div class="card-value">72</div>
+      </article>
+      <article class="data-card">
+        <div class="card-label">Overdue Invoices</div>
+        <div class="card-value">18</div>
+      </article>
+      <article class="data-card">
+        <div class="card-label">Collection Rate</div>
+        <div class="card-value">86%</div>
+      </article>
+    </section>
+
+    <section id="invoiceListSection" class="table-card">
+      <div class="table-card-header">
+        <div>
+          <h2>Invoice Ledger</h2>
+          <p class="table-subtitle">Review invoice details across paid and overdue statuses.</p>
+        </div>
+      </div>
+
+      <div class="table-toolbar">
+        <div class="pill-tabs" role="tablist">
+          <button class="pill-tab active" data-filter="all">All</button>
+          <button class="pill-tab" data-filter="partial">Partial</button>
+          <button class="pill-tab" data-filter="paid">Paid</button>
+          <button class="pill-tab" data-filter="overdue">Overdue</button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="primary-table">
+          <thead>
+            <tr>
+              <th>Invoice Number</th>
+              <th>Customer</th>
+              <th>Invoice Date</th>
+              <th>Due Date</th>
+              <th>Subtotal</th>
+              <th>GST (9%)</th>
+              <th>Total Amount</th>
+              <th>Amount Paid</th>
+              <th>Outstanding</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>INV-2026-010</td>
+              <td>Emerald Retail</td>
+              <td>2026-04-21</td>
+              <td>2026-05-05</td>
+              <td>$5,500</td>
+              <td>$495</td>
+              <td>$5,995</td>
+              <td>$5,995</td>
+              <td>$0</td>
+              <td><span class="badge-status status-paid">Paid</span></td>
+              <td class="actions-cell">
+                <button class="btn btn-ghost btn-sm view">View</button>
+                <button class="btn btn-secondary btn-sm edit">Edit</button>
+                <button class="btn btn-danger btn-sm delete">Delete</button>
+                <button class="btn btn-ghost btn-sm">Print</button>
+              </td>
+            </tr>
+            <tr>
+              <td>INV-2026-008</td>
+              <td>Atlas Manufacturing</td>
+              <td>2026-04-05</td>
+              <td>2026-04-20</td>
+              <td>$9,800</td>
+              <td>$882</td>
+              <td>$10,682</td>
+              <td>$4,000</td>
+              <td>$6,682</td>
+              <td><span class="badge-status status-overdue">Overdue</span></td>
+              <td class="actions-cell">
+                <button class="btn btn-ghost btn-sm view">View</button>
+                <button class="btn btn-secondary btn-sm edit">Edit</button>
+                <button class="btn btn-danger btn-sm delete">Delete</button>
+                <button class="btn btn-ghost btn-sm">Print</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination-bar">
+        <div class="pagination">
+          <button class="page-btn">Previous</button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn">Next</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="invoiceDetailSection" class="table-card" style="display:none;">
+      <div class="table-card-header">
+        <div>
+          <h2>Invoice Detail</h2>
+          <p class="table-subtitle">Invoice details for review and PDF export.</p>
+        </div>
+        <div class="table-actions">
+          <button id="detailBackBtn" class="btn btn-ghost">Back</button>
+          <button id="detailEditBtn" class="btn btn-secondary">Edit</button>
+          <button id="detailPrintBtn" class="btn btn-primary">Download PDF</button>
+        </div>
+      </div>
+      <div class="detail-grid">
+        <div>
+          <h3 class="detail-title">Invoice <span class="invoice-number">INV-2025-001</span></h3>
+          <div class="badge-status status-paid invoice-status">Paid</div>
+        </div>
+        <div class="detail-block">
+          <p><strong>Customer</strong></p>
+          <p class="customer-name">GreenCraft Ltd</p>
+          <p>123 Orchard Ave</p>
+          <p>Singapore 238821</p>
+        </div>
+        <div class="detail-block">
+          <p><strong>Invoice Date</strong></p>
+          <p class="invoice-date">2025-04-01</p>
+          <p><strong>Due Date</strong></p>
+          <p class="due-date">2025-04-15</p>
+        </div>
+      </div>
+      <div class="table-responsive mb-4">
+        <table class="primary-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th class="text-end">Qty</th>
+              <th class="text-end">Unit Price</th>
+              <th class="text-end">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Design services</td>
+              <td class="text-end">5</td>
+              <td class="text-end">$250.00</td>
+              <td class="text-end">$1,250.00</td>
+            </tr>
+            <tr>
+              <td>Hosting fee</td>
+              <td class="text-end">1</td>
+              <td class="text-end">$600.00</td>
+              <td class="text-end">$600.00</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="summary-panel">
+        <div class="summary-row"><span>Subtotal</span><span class="invoice-subtotal">$1,850.00</span></div>
+        <div class="summary-row"><span>GST</span><span class="invoice-gst">$185.00</span></div>
+        <div class="summary-row total"><span>Total</span><span class="invoice-total">$2,035.00</span></div>
+      </div>
+    </section>
+
+    <section id="invoiceFormSection" class="table-card" style="display:none;">
+      <div class="table-card-header">
+        <div>
+          <h2>Invoice Form</h2>
+          <p class="table-subtitle">Build an invoice with customer details and line items.</p>
+        </div>
+        <div class="table-actions">
+          <button id="saveInvoiceBtn" class="btn btn-primary">Save</button>
+          <button id="cancelInvoiceBtn" class="btn btn-ghost">Cancel</button>
+        </div>
+      </div>
+      <div class="form-grid">
+        <label class="form-field">
+          <span>Invoice Number</span>
+          <input id="invoiceNumber" name="invoiceNo" type="text" class="input-field" placeholder="INV-2026-014" />
+        </label>
+        <label class="form-field">
+          <span>Customer</span>
+          <input id="customerName" name="customer" type="text" class="input-field" placeholder="Customer name" />
+        </label>
+        <label class="form-field">
+          <span>Invoice Date</span>
+          <input id="invoiceDate" name="invoiceDate" type="date" class="input-field" />
+        </label>
+        <label class="form-field">
+          <span>Due Date</span>
+          <input id="dueDate" name="dueDate" type="date" class="input-field" />
+        </label>
+        <label class="form-field">
+          <span>GST Rate (%)</span>
+          <input id="gstRate" name="gstRate" type="number" step="0.1" class="input-field" value="9" />
+        </label>
+        <label class="form-field full-width">
+          <span>Notes</span>
+          <textarea id="notes" name="notes" class="textarea-field" rows="3" placeholder="Additional invoice notes"></textarea>
+        </label>
+      </div>
+      <div class="table-responsive mb-3">
+        <table class="primary-table invoice-items">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th class="text-end">Qty</th>
+              <th class="text-end">Unit Price</th>
+              <th class="text-end">Amount</th>
+              <th class="text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody id="invoiceItemsBody">
+            <tr>
+              <td><input type="text" class="input-field item-description" name="description" placeholder="Description"></td>
+              <td><input type="number" class="input-field item-qty" name="qty" min="0" step="1" value="1"></td>
+              <td><input type="number" class="input-field item-price" name="unitPrice" min="0" step="0.01" value="0.00"></td>
+              <td class="text-end item-amount">$0.00</td>
+              <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-row">Remove</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-actions mb-4">
+        <button id="addItemButton" class="btn btn-secondary btn-sm add-row">Add Row</button>
+      </div>
+      <div class="summary-panel">
+        <div class="summary-row"><span>Subtotal</span><span class="invoice-subtotal">$0.00</span></div>
+        <div class="summary-row"><span>GST</span><span class="invoice-gst">$0.00</span></div>
+        <div class="summary-row total"><span>Total</span><span class="invoice-total">$0.00</span></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="invoice.js"></script>
+  <script src="common.js"></script>
+</body>
+</html>

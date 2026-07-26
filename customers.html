@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer Management | TSH Synergy</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="page-shell">
+  <main class="page-main">
+    <header class="page-header">
+      <div class="page-title-group">
+        <span class="eyebrow">Customer Management</span>
+        <h1>Customer Management</h1>
+        <p class="page-subtitle">Manage customer accounts, credit limits and payment terms.</p>
+      </div>
+      <nav class="section-nav">
+        <a href="dashboard.html" class="nav-link">Dashboard</a>
+        <a href="customers.html" class="nav-link active">Customers</a>
+        <a href="invoice.html" class="nav-link">Invoices</a>
+        <a href="payments.html" class="nav-link">Payments</a>
+        <a href="reports.html" class="nav-link">Reports</a>
+        <a href="#" class="nav-link" data-action="logout">Logout</a>
+      </nav>
+    </header>
+
+    <section class="page-panel action-bar">
+      <div class="filter-group">
+        <label class="sr-only" for="searchInput">Search customers</label>
+        <input id="searchInput" class="search-input" type="search" placeholder="Search customers, company or email" />
+        <select id="statusFilter" class="select-field">
+          <option value="all">All statuses</option>
+          <option value="active">Active</option>
+          <option value="on-hold">On Hold</option>
+          <option value="overdue">Overdue</option>
+        </select>
+      </div>
+      <div class="action-group">
+        <button id="exportCustomersButton" class="btn btn-secondary">Export Customers</button>
+        <button id="openCustomerModal" class="btn btn-primary">Add Customer</button>
+      </div>
+    </section>
+
+    <section class="card-grid stats-grid">
+      <article class="data-card">
+        <div class="card-label">Total Customers</div>
+        <div class="card-value" id="totalCustomers">74</div>
+      </article>
+      <article class="data-card">
+        <div class="card-label">Active Customers</div>
+        <div class="card-value" id="activeCustomers">61</div>
+      </article>
+      <article class="data-card">
+        <div class="card-label">Total Credit Exposure</div>
+        <div class="card-value" id="creditExposure">$1.82M</div>
+      </article>
+      <article class="data-card">
+        <div class="card-label">Average Collection Period</div>
+        <div class="card-value" id="avgCollection">28 days</div>
+      </article>
+    </section>
+
+    <section class="table-card">
+      <div class="table-card-header">
+        <div>
+          <h2>Customer Directory</h2>
+          <p class="table-subtitle">Track credit limits, payment terms and outstanding balances with action controls.</p>
+        </div>
+        <div class="table-actions">
+          <button id="openCustomerModalTop" class="btn btn-primary">Add Customer</button>
+        </div>
+      </div>
+
+      <div class="table-toolbar">
+        <div class="pill-tabs" role="tablist">
+          <button class="pill-tab active" data-status="all">All</button>
+          <button class="pill-tab" data-status="active">Active</button>
+          <button class="pill-tab" data-status="on-hold">On Hold</button>
+          <button class="pill-tab" data-status="overdue">Overdue</button>
+        </div>
+      </div>
+
+      <div id="customerTableWrapper" class="table-responsive"></div>
+      <div id="customerEmptyState" class="empty-state" hidden>
+        <p>No customers match your search yet.</p>
+      </div>
+
+      <div class="pagination-bar">
+        <span id="customerCountLabel">Showing 8 of 74 customers</span>
+        <div class="pagination">
+          <button class="page-btn">Previous</button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn">Next</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="customerModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="customerModalTitle">
+      <div class="modal-header">
+        <div>
+          <h3 id="customerModalTitle">Add Customer</h3>
+          <p class="modal-subtitle">Create a new customer profile for receivables tracking.</p>
+        </div>
+        <button class="btn btn-ghost" id="closeCustomerModal">×</button>
+      </div>
+      <form id="customerForm" class="modal-body">
+        <div class="form-grid">
+          <label class="form-field">
+            <span>Company Name</span>
+            <input class="input-field" type="text" id="companyName" required />
+          </label>
+          <label class="form-field">
+            <span>Contact Person</span>
+            <input class="input-field" type="text" id="contactPerson" required />
+          </label>
+          <label class="form-field">
+            <span>Email</span>
+            <input class="input-field" type="email" id="customerEmail" required />
+          </label>
+          <label class="form-field">
+            <span>Phone Number</span>
+            <input class="input-field" type="tel" id="customerPhone" required />
+          </label>
+          <label class="form-field full-width">
+            <span>Address</span>
+            <textarea class="textarea-field" id="customerAddress" rows="3"></textarea>
+          </label>
+          <label class="form-field">
+            <span>Credit Limit</span>
+            <input class="input-field" type="text" id="customerCredit" required />
+          </label>
+          <label class="form-field">
+            <span>Payment Terms</span>
+            <input class="input-field" type="text" id="customerTerms" required />
+          </label>
+        </div>
+      </form>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="cancelCustomerModal">Cancel</button>
+        <button class="btn btn-primary" id="saveCustomerButton">Save Customer</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="deleteModal" class="modal-overlay" aria-hidden="true">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="deleteModalTitle">
+      <div class="modal-header">
+        <div>
+          <h3 id="deleteModalTitle">Delete Customer</h3>
+          <p class="modal-subtitle">Are you sure you want to delete this customer?</p>
+        </div>
+        <button class="btn btn-ghost" id="closeDeleteModal">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="confirm-copy">This action cannot be undone. The customer record and all open balances will be removed from the customer directory.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="cancelDeleteButton">Cancel</button>
+        <button class="btn btn-danger" id="confirmDeleteButton">Delete Customer</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script>
+    const customerData = [
+      {
+        company: 'Aurora Logistics',
+        contact: 'Samantha Lee',
+        email: 'samantha@auroralogistics.com',
+        phone: '+65 9123 4567',
+        credit: '$78,000',
+        terms: 'Net 30',
+        balance: '$24,500',
+        status: 'active',
+        address: '18 Shenton Way, Singapore'
+      },
+      {
+        company: 'Vertex Manufacturing',
+        contact: 'James Tan',
+        email: 'james.tan@vertex.com.sg',
+        phone: '+65 9234 5567',
+        credit: '$120,000',
+        terms: 'Net 45',
+        balance: '$62,800',
+        status: 'on-hold',
+        address: '88 Market Street, Singapore'
+      },
+      {
+        company: 'BlueHarbor Ltd',
+        contact: 'Fiona Chow',
+        email: 'fiona@blueharbor.co',
+        phone: '+65 9345 6789',
+        credit: '$92,000',
+        terms: 'Net 30',
+        balance: '$8,400',
+        status: 'active',
+        address: '32 Marina Boulevard, Singapore'
+      },
+      {
+        company: 'Nimbus Retail',
+        contact: 'Daniel Wong',
+        email: 'daniel@nimbusretail.com',
+        phone: '+65 9456 7890',
+        credit: '$65,000',
+        terms: 'Net 60',
+        balance: '$18,300',
+        status: 'overdue',
+        address: '5 Orchard Road, Singapore'
+      },
+      {
+        company: 'Cedar Financial',
+        contact: 'Maya Patel',
+        email: 'maya.patel@cedarfin.com',
+        phone: '+65 9567 8901',
+        credit: '$142,000',
+        terms: 'Net 30',
+        balance: '$4,200',
+        status: 'active',
+        address: '122 Cecil Street, Singapore'
+      }
+    ];
+
+    let customerState = {
+      loading: true,
+      activeStatus: 'all',
+      query: '',
+      editIndex: null,
+      customers: [...customerData]
+    };
+
+    function getStatusLabel(status) {
+      if (status === 'active') return 'Active';
+      if (status === 'on-hold') return 'On Hold';
+      if (status === 'overdue') return 'Overdue';
+      return status;
+    }
+
+    function showToast(message, type = 'default') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      document.getElementById('toastContainer').appendChild(toast);
+      setTimeout(() => toast.remove(), 3500);
+    }
+
+    function getFilteredCustomers() {
+      return customerState.customers.filter(customer => {
+        const query = customerState.query.toLowerCase();
+        const matchesSearch = query === '' || [customer.company, customer.contact, customer.email].some(field => field.toLowerCase().includes(query));
+        const matchesStatus = customerState.activeStatus === 'all' || customer.status === customerState.activeStatus;
+        return matchesSearch && matchesStatus;
+      });
+    }
+
+    function renderStats() {
+      const customers = customerState.customers;
+      const activeCount = customers.filter(c => c.status === 'active').length;
+      const creditTotal = customers.reduce((sum, c) => sum + Number(c.credit.replace(/[,$]/g, '')), 0);
+      const avgDays = 28;
+      document.getElementById('totalCustomers').textContent = customers.length;
+      document.getElementById('activeCustomers').textContent = activeCount;
+      document.getElementById('creditExposure').textContent = `$${creditTotal.toLocaleString()}`;
+      document.getElementById('avgCollection').textContent = `${avgDays} days`;
+    }
+
+    function renderCustomerTable() {
+      const wrapper = document.getElementById('customerTableWrapper');
+      const emptyState = document.getElementById('customerEmptyState');
+      const filtered = getFilteredCustomers();
+      const rows = filtered.map((customer, index) => {
+        return `
+          <tr>
+            <td>${customer.company}</td>
+            <td>${customer.contact}</td>
+            <td>${customer.email}</td>
+            <td>${customer.phone}</td>
+            <td>${customer.credit}</td>
+            <td>${customer.terms}</td>
+            <td>${customer.balance}</td>
+            <td><span class="badge-status status-${customer.status}">${getStatusLabel(customer.status)}</span></td>
+            <td>
+              <button class="btn btn-ghost btn-sm" data-action="view" data-index="${index}">View</button>
+              <button class="btn btn-secondary btn-sm" data-action="edit" data-index="${index}">Edit</button>
+              <button class="btn btn-danger btn-sm" data-action="delete" data-index="${index}">Delete</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      if (!filtered.length) {
+        wrapper.innerHTML = '';
+        emptyState.hidden = false;
+      } else {
+        emptyState.hidden = true;
+        wrapper.innerHTML = `
+          <table class="primary-table">
+            <thead>
+              <tr>
+                <th>Company Name</th>
+                <th>Contact Person</th>
+                <th>Email</th>
+                <th>Phone Number</th>
+                <th>Credit Limit</th>
+                <th>Payment Terms</th>
+                <th>Outstanding Balance</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        `;
+      }
+      document.getElementById('customerCountLabel').textContent = `Showing ${filtered.length} of ${customerState.customers.length} customers`;
+    }
+
+    function setActiveTab(status) {
+      customerState.activeStatus = status;
+      document.querySelectorAll('.pill-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.status === status);
+      });
+      renderCustomerTable();
+    }
+
+    function openModal(modalId) {
+      const modal = document.getElementById(modalId);
+      modal.setAttribute('aria-hidden', 'false');
+      modal.classList.add('open');
+    }
+
+    function closeModal(modalId) {
+      const modal = document.getElementById(modalId);
+      modal.setAttribute('aria-hidden', 'true');
+      modal.classList.remove('open');
+    }
+
+    function resetCustomerForm() {
+      document.getElementById('companyName').value = '';
+      document.getElementById('contactPerson').value = '';
+      document.getElementById('customerEmail').value = '';
+      document.getElementById('customerPhone').value = '';
+      document.getElementById('customerAddress').value = '';
+      document.getElementById('customerCredit').value = '';
+      document.getElementById('customerTerms').value = '';
+      customerState.editIndex = null;
+      document.getElementById('customerModalTitle').textContent = 'Add Customer';
+    }
+
+    function populateCustomerForm(customer) {
+      document.getElementById('companyName').value = customer.company;
+      document.getElementById('contactPerson').value = customer.contact;
+      document.getElementById('customerEmail').value = customer.email;
+      document.getElementById('customerPhone').value = customer.phone;
+      document.getElementById('customerAddress').value = customer.address;
+      document.getElementById('customerCredit').value = customer.credit;
+      document.getElementById('customerTerms').value = customer.terms;
+    }
+
+    function openCustomerModal(mode, index = null) {
+      resetCustomerForm();
+      if (mode === 'edit' && index !== null) {
+        customerState.editIndex = index;
+        const customer = customerState.customers[index];
+        populateCustomerForm(customer);
+        document.getElementById('customerModalTitle').textContent = 'Edit Customer';
+      }
+      openModal('customerModal');
+    }
+
+    function openDeleteModal(index) {
+      customerState.editIndex = index;
+      openModal('deleteModal');
+    }
+
+    function saveCustomer() {
+      const record = {
+        company: document.getElementById('companyName').value.trim(),
+        contact: document.getElementById('contactPerson').value.trim(),
+        email: document.getElementById('customerEmail').value.trim(),
+        phone: document.getElementById('customerPhone').value.trim(),
+        address: document.getElementById('customerAddress').value.trim(),
+        credit: document.getElementById('customerCredit').value.trim(),
+        terms: document.getElementById('customerTerms').value.trim(),
+        balance: '$0',
+        status: 'active'
+      };
+
+      if (!record.company || !record.contact || !record.email) {
+        showToast('Please fill in the required customer details.', 'error');
+        return;
+      }
+
+      if (customerState.editIndex !== null) {
+        customerState.customers[customerState.editIndex] = { ...customerState.customers[customerState.editIndex], ...record };
+        showToast('Customer profile updated successfully.', 'success');
+      } else {
+        customerState.customers.unshift(record);
+        showToast('Customer added to directory.', 'success');
+      }
+
+      closeModal('customerModal');
+      renderStats();
+      renderCustomerTable();
+    }
+
+    function confirmDeleteCustomer() {
+      if (customerState.editIndex !== null) {
+        customerState.customers.splice(customerState.editIndex, 1);
+        showToast('Customer removed from directory.', 'success');
+        customerState.editIndex = null;
+      }
+      closeModal('deleteModal');
+      renderStats();
+      renderCustomerTable();
+    }
+
+    function renderSkeleton() {
+      return `
+        <table class="primary-table skeleton-table">
+          <thead>
+            <tr>
+              ${Array(9).fill('<th></th>').join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${Array(5).fill('<tr>' + Array(9).fill('<td><div class="skeleton-row"></div></td>').join('') + '</tr>').join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function showLoading() {
+      document.getElementById('customerTableWrapper').innerHTML = renderSkeleton();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderStats();
+      showLoading();
+      setTimeout(() => {
+        customerState.loading = false;
+        renderCustomerTable();
+      }, 300);
+
+      document.getElementById('searchInput').addEventListener('input', event => {
+        customerState.query = event.target.value;
+        renderCustomerTable();
+      });
+
+      document.getElementById('statusFilter').addEventListener('change', event => {
+        setActiveTab(event.target.value);
+      });
+
+      document.querySelectorAll('.pill-tab').forEach(tab => {
+        tab.addEventListener('click', event => {
+          const status = event.currentTarget.dataset.status;
+          setActiveTab(status);
+          document.getElementById('statusFilter').value = status;
+        });
+      });
+
+      document.getElementById('openCustomerModal').addEventListener('click', () => openCustomerModal('new'));
+      document.getElementById('openCustomerModalTop').addEventListener('click', () => openCustomerModal('new'));
+      document.getElementById('closeCustomerModal').addEventListener('click', () => closeModal('customerModal'));
+      document.getElementById('cancelCustomerModal').addEventListener('click', () => closeModal('customerModal'));
+      document.getElementById('saveCustomerButton').addEventListener('click', saveCustomer);
+      document.getElementById('closeDeleteModal').addEventListener('click', () => closeModal('deleteModal'));
+      document.getElementById('cancelDeleteButton').addEventListener('click', () => closeModal('deleteModal'));
+      document.getElementById('confirmDeleteButton').addEventListener('click', confirmDeleteCustomer);
+      document.getElementById('exportCustomersButton').addEventListener('click', () => showToast('Customer export started.', 'success'));
+
+      document.getElementById('customerTableWrapper').addEventListener('click', event => {
+        const button = event.target.closest('button');
+        if (!button) return;
+        const action = button.dataset.action;
+        const index = Number(button.dataset.index);
+        if (action === 'edit') openCustomerModal('edit', index);
+        if (action === 'delete') openDeleteModal(index);
+        if (action === 'view') showToast(`Viewing ${customerState.customers[index].company}`, 'default');
+      });
+    });
+  </script>
+  <script src="common.js"></script>
+</body>
+</html>

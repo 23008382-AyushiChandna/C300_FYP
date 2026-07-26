@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TSH Synergy Pte Ltd</title>
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+
+  <main class="dashboard-main">
+
+    <header class="dashboard-header">
+
+      <h1>TSH Synergy Pte Ltd</h1>
+
+      <nav class="section-nav">
+        <a href="dashboard.html" class="nav-link active">Dashboard</a>
+        <a href="customers.html" class="nav-link">Customers</a>
+        <a href="payments.html" class="nav-link">Payments</a>
+        <a href="invoice.html" class="nav-link">Invoices</a>
+        <a href="reports.html" class="nav-link">Reports</a>
+        <a href="#" class="nav-link" data-action="logout">Logout</a>
+        <a href="#" class="nav-link" onclick="toggleAIChat()">
+          AI Assistant
+        </a>
+      </nav>
+
+    </header>
+
+    <section class="dashboard-content">
+
+      <div class="stats-grid">
+
+        <div class="stat-card">
+          <h3>Total Receivables</h3>
+          <div class="stat-value" id="stat-total-receivables">Loading...</div>
+        </div>
+
+        <div class="stat-card">
+          <h3>Overdue Amount</h3>
+          <div class="stat-value" id="stat-overdue-amount">Loading...</div>
+        </div>
+
+        <div class="stat-card">
+          <h3>Collected</h3>
+          <div class="stat-value" id="stat-collected">Loading...</div>
+        </div>
+
+        <div class="stat-card">
+          <h3>Active Customers</h3>
+          <div class="stat-value" id="stat-active-customers">Loading...</div>
+        </div>
+
+      </div>
+
+      <div class="summary-grid">
+
+        <div class="summary-card">
+
+          <h3>AR Ageing Summary</h3>
+
+          <div class="ageing-chart">
+            <p id="ageing-0-30">0-30 days: Loading...</p>
+            <p id="ageing-31-60">31-60 days: Loading...</p>
+            <p id="ageing-61-90">61-90 days: Loading...</p>
+            <p id="ageing-90-plus">90+ days: Loading...</p>
+          </div>
+
+        </div>
+
+        <div class="summary-card">
+
+          <h3>Recent Invoices</h3>
+
+          <ul class="invoice-list" id="recent-invoices-list">
+            <li>Loading recent invoices...</li>
+          </ul>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <div class="logout-section">
+      <button class="primary-btn" data-action="logout">
+        Logout
+      </button>
+    </div>
+
+  </main>
+
+  <script src="aichatbot.js"></script>
+  <script src="common.js"></script>
+
+  <script>
+    function formatCurrency(value) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 0
+      }).format(Number(value || 0));
+    }
+
+    function formatStatus(status) {
+      return String(status || 'Pending').replace(/\b\w/g, (char) => char.toUpperCase());
+    }
+
+    async function loadDashboardData() {
+      try {
+        const response = await fetch('/api/dashboard/aggregates');
+        if (!response.ok) throw new Error('Unable to load dashboard data');
+
+        const data = await response.json();
+
+        document.getElementById('stat-total-receivables').textContent = formatCurrency(data.stats?.totalReceivables);
+        document.getElementById('stat-overdue-amount').textContent = formatCurrency(data.stats?.overdueAmount);
+        document.getElementById('stat-collected').textContent = formatCurrency(data.stats?.totalCollected);
+        document.getElementById('stat-active-customers').textContent = data.stats?.activeCustomers ?? 0;
+
+        document.getElementById('ageing-0-30').textContent = `0-30 days: ${formatCurrency(data.ageing?.d0to30)}`;
+        document.getElementById('ageing-31-60').textContent = `31-60 days: ${formatCurrency(data.ageing?.d31to60)}`;
+        document.getElementById('ageing-61-90').textContent = `61-90 days: ${formatCurrency(data.ageing?.d61to90)}`;
+        document.getElementById('ageing-90-plus').textContent = `90+ days: ${formatCurrency(data.ageing?.d90plus)}`;
+
+        const invoicesList = document.getElementById('recent-invoices-list');
+        const recentInvoices = data.recentInvoices || [];
+
+        if (recentInvoices.length === 0) {
+          invoicesList.innerHTML = '<li>No recent invoices found.</li>';
+        } else {
+          invoicesList.innerHTML = recentInvoices.map((invoice) => {
+            return `<li>${invoice.invoiceNumber || invoice.id} - ${formatCurrency(invoice.total)} - ${formatStatus(invoice.status)}</li>`;
+          }).join('');
+        }
+      } catch (error) {
+        document.getElementById('stat-total-receivables').textContent = 'Unavailable';
+        document.getElementById('stat-overdue-amount').textContent = 'Unavailable';
+        document.getElementById('stat-collected').textContent = 'Unavailable';
+        document.getElementById('stat-active-customers').textContent = 'Unavailable';
+        document.getElementById('ageing-0-30').textContent = '0-30 days: Unavailable';
+        document.getElementById('ageing-31-60').textContent = '31-60 days: Unavailable';
+        document.getElementById('ageing-61-90').textContent = '61-90 days: Unavailable';
+        document.getElementById('ageing-90-plus').textContent = '90+ days: Unavailable';
+        document.getElementById('recent-invoices-list').innerHTML = '<li>Unable to load invoices.</li>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDashboardData);
+  </script>
+
+</body>
+</html>
