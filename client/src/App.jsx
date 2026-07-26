@@ -145,27 +145,26 @@ function ReportsPage() {
     status: 'paid',
     customer: 'all'
   };
-    <BrowserRouter>
-      <Chatbot />
-      <Routes>
-        <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
-        <Route path="/signup" element={<SignupPage onLogin={handleLogin} />} />
-        <Route path="/" element={token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
-        <Route path="/dashboard" element={token ? <DashboardPage /> : <Navigate to="/login" />} />
-        <Route path="/customers" element={token ? <CustomersPage /> : <Navigate to="/login" />} />
-        <Route path="/invoices" element={token ? <InvoicesPage /> : <Navigate to="/login" />} />
-        <Route path="/payments" element={token ? <PaymentsPage /> : <Navigate to="/login" />} />
-        <Route path="/reports" element={token ? <ReportsPage /> : <Navigate to="/login" />} />
-      </Routes>
-    </BrowserRouter>
-    agingRows: []
-  });
-
-export default AppRoot
+  
   const [filters, setFilters] = React.useState(defaultFilters);
   const [appliedFilters, setAppliedFilters] = React.useState(defaultFilters);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState('');
+  const [allInvoices, setAllInvoices] = React.useState([]);
+  const [allPayments, setAllPayments] = React.useState([]);
+  const [reportData, setReportData] = React.useState({
+    totalOutstanding: 0,
+    totalCollected: 0,
+    overdueAmount: 0,
+    outstandingInvoices: [],
+    partialInvoices: [],
+    paidInvoices: [],
+    overdueInvoices: [],
+    paymentHistory: [],
+    customerStatements: [],
+    monthlySales: [],
+    agingRows: []
+  });
 
   const customerOptions = React.useMemo(() => {
     const names = allInvoices
@@ -585,6 +584,7 @@ export default AppRoot
 function DashboardLayout({ user, onLogout, children }) {
   return (
     <div className="min-h-screen bg-background text-textPrimary">
+      <Chatbot />
       <nav className="bg-card border-b border-border p-4 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex gap-6">
@@ -663,6 +663,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <Chatbot />
       <Routes>
         <Route path="/dashboard" element={<DashboardLayout user={user} onLogout={handleLogout}><DashboardPage user={user} onLogout={handleLogout} /></DashboardLayout>} />
         <Route path="/customers" element={<DashboardLayout user={user} onLogout={handleLogout}><CustomersPage user={user} onLogout={handleLogout} /></DashboardLayout>} />
