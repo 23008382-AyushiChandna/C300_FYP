@@ -5,6 +5,7 @@ import Dashboard from './components/Dashboard'
 import Customers from './components/Customers'
 import Invoices from './components/Invoices'
 import Payments from './components/Payments'
+import Chatbot from './components/Chatbot'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:1573';
 const TOKEN_KEY = 'tsh_token';
@@ -144,22 +145,23 @@ function ReportsPage() {
     status: 'paid',
     customer: 'all'
   };
-
-  const [reportData, setReportData] = React.useState({
-    totalOutstanding: 0,
-    totalCollected: 0,
-    overdueAmount: 0,
-    outstandingInvoices: [],
-    partialInvoices: [],
-    paidInvoices: [],
-    overdueInvoices: [],
-    paymentHistory: [],
-    customerStatements: [],
-    monthlySales: [],
+    <BrowserRouter>
+      <Chatbot />
+      <Routes>
+        <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+        <Route path="/signup" element={<SignupPage onLogin={handleLogin} />} />
+        <Route path="/" element={token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
+        <Route path="/dashboard" element={token ? <DashboardPage /> : <Navigate to="/login" />} />
+        <Route path="/customers" element={token ? <CustomersPage /> : <Navigate to="/login" />} />
+        <Route path="/invoices" element={token ? <InvoicesPage /> : <Navigate to="/login" />} />
+        <Route path="/payments" element={token ? <PaymentsPage /> : <Navigate to="/login" />} />
+        <Route path="/reports" element={token ? <ReportsPage /> : <Navigate to="/login" />} />
+      </Routes>
+    </BrowserRouter>
     agingRows: []
   });
-  const [allInvoices, setAllInvoices] = React.useState([]);
-  const [allPayments, setAllPayments] = React.useState([]);
+
+export default AppRoot
   const [filters, setFilters] = React.useState(defaultFilters);
   const [appliedFilters, setAppliedFilters] = React.useState(defaultFilters);
   const [loading, setLoading] = React.useState(true);
@@ -578,6 +580,7 @@ function ReportsPage() {
     </div>
   )
 }
+
 
 function DashboardLayout({ user, onLogout, children }) {
   return (
