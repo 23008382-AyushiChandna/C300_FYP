@@ -68,45 +68,32 @@
         <div class="chart-header">
           <h3>Receivables Ageing Distribution</h3>
         </div>
-        <div class="donut-chart">
-          <span class="donut-label">Ageing</span>
-          <div class="donut-segment current"></div>
-          <div class="donut-segment days30"></div>
-          <div class="donut-segment days60"></div>
-          <div class="donut-segment days90"></div>
-        </div>
-        <div class="chart-legend">
-          <span><span class="legend-swatch current"></span>Current</span>
-          <span><span class="legend-swatch days30"></span>31-60</span>
-          <span><span class="legend-swatch days60"></span>61-90</span>
-          <span><span class="legend-swatch days90"></span>90+</span>
+        <div class="ageing-layout">
+          <div class="chart-canvas-wrap">
+            <canvas id="ageingDistributionChart" aria-label="Receivables Ageing Distribution"></canvas>
+          </div>
+          <div class="chart-legend chart-legend-vertical" id="ageingLegend">
+            <span><span class="legend-swatch current"></span>Current 0%</span>
+            <span><span class="legend-swatch days30"></span>31-60 0%</span>
+            <span><span class="legend-swatch days60"></span>61-90 0%</span>
+            <span><span class="legend-swatch days90"></span>90+ 0%</span>
+          </div>
         </div>
       </article>
       <article class="chart-card">
         <div class="chart-header">
           <h3>Monthly Collection Trend</h3>
         </div>
-        <div id="monthlyCollectionChart" class="bar-chart">
-          <div class="bar" style="height:0%" title="Loading"></div>
+        <div class="chart-canvas-wrap chart-canvas-tall">
+          <canvas id="monthlyCollectionChart" aria-label="Monthly Collection Trend"></canvas>
         </div>
-      </article>
-      <article class="chart-card">
-        <div class="chart-header">
-          <h3>Outstanding Balance Trend</h3>
-        </div>
-        <div class="line-chart-placeholder" id="outstandingTrend">Loading...</div>
-      </article>
-      <article class="chart-card">
-        <div class="chart-header">
-          <h3>Collection Performance</h3>
-        </div>
-        <div class="area-chart-placeholder" id="collectionPerformance">Loading...</div>
       </article>
     </section>
 
     <section class="table-card">
       <div class="table-card-header">
         <div>
+          <p class="attention-title">Overdue Invoices - Requires Immediate Attention</p>
           <h2>Invoices</h2>
           <p class="table-subtitle">View invoices filtered by status (paid, partial, or overdue).</p>
         </div>
@@ -141,6 +128,7 @@
     </section>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="aichatbot.js"></script>
   <script src="reports.js"></script>
   <script src="common.js"></script>

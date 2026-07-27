@@ -584,7 +584,6 @@ function ReportsPage() {
 function DashboardLayout({ user, onLogout, children }) {
   return (
     <div className="min-h-screen bg-background text-textPrimary">
-      <Chatbot />
       <nav className="bg-card border-b border-border p-4 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex gap-6">
@@ -652,6 +651,7 @@ function App() {
   if (!token) {
     return (
       <BrowserRouter>
+        <Chatbot />
         <Routes>
           <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
           <Route path="/signup" element={<SignupPage onLogin={handleLogin} />} />

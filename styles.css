@@ -1062,6 +1062,30 @@ body {
   padding: 22px;
 }
 
+.ageing-layout {
+  display: grid;
+  grid-template-columns: minmax(200px, 260px) 1fr;
+  align-items: center;
+  gap: 18px;
+}
+
+.chart-canvas-wrap {
+  position: relative;
+  min-height: 220px;
+  height: 220px;
+  width: 100%;
+}
+
+.chart-canvas-tall {
+  min-height: 250px;
+  height: 250px;
+}
+
+.chart-canvas-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
 .donut-chart {
   position: relative;
   width: 200px;
@@ -1101,6 +1125,10 @@ body {
   color: var(--muted);
 }
 
+.chart-legend-vertical {
+  grid-template-columns: 1fr;
+}
+
 .legend-swatch {
   display: inline-block;
   width: 12px;
@@ -1113,6 +1141,13 @@ body {
 .legend-swatch.days30 { background: rgba(20,184,166,0.85); }
 .legend-swatch.days60 { background: rgba(249,115,22,0.85); }
 .legend-swatch.days90 { background: rgba(240,67,63,0.85); }
+
+.attention-title {
+  margin: 0 0 8px;
+  color: var(--danger);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
 
 .bar-chart {
   display: flex;
@@ -1266,6 +1301,9 @@ body {
   .detail-grid,
   .form-grid,
   .chart-grid {
+    grid-template-columns: 1fr;
+  }
+  .ageing-layout {
     grid-template-columns: 1fr;
   }
 }

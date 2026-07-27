@@ -5,6 +5,11 @@ const reportState = {
   payments: []
 };
 
+const chartState = {
+  ageing: null,
+  monthly: null
+};
+
 function setText(id, value) {
   const element = document.getElementById(id);
   if (element) {
@@ -210,27 +215,166 @@ function renderTopCustomers(customerData) {
 }
 
 function renderMonthlyCollection(payments) {
-  const chart = document.getElementById('monthlyCollectionChart');
-  if (!chart) return;
+  const canvas = document.getElementById('monthlyCollectionChart');
+  if (!canvas) return;
 
-  const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const points = [];
+  const labels = [];
   const now = new Date();
-  const year = now.getFullYear();
-  const monthly = new Array(12).fill(0);
+
+  for (let i = 5; i >= 0; i -= 1) {
+    const marker = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    labels.push(marker.toLocaleString(undefined, { month: 'short' }));
+    points.push({ key: `${marker.getFullYear()}-${marker.getMonth()}` , total: 0 });
+  }
 
   payments.forEach((payment) => {
     const paymentDate = toDate(payment.paymentDate || payment.date);
-    if (!paymentDate || paymentDate.getFullYear() !== year) return;
-    monthly[paymentDate.getMonth()] += toNumber(payment.amount);
+    if (!paymentDate) return;
+
+    const key = `${paymentDate.getFullYear()}-${paymentDate.getMonth()}`;
+    const slot = points.find((point) => point.key === key);
+    if (slot) {
+      slot.total += toNumber(payment.amount);
+    }
   });
 
-  const maxValue = Math.max(...monthly, 1);
+  const values = points.map((point) => Number(point.total.toFixed(2)));
 
-  chart.innerHTML = monthLabels.map((label, index) => {
-    const value = monthly[index];
-    const height = Math.round((value / maxValue) * 100);
-    return `<div class="bar" style="height:${height}%" title="${label}: ${formatMoney(value)}"></div>`;
-  }).join('');
+  if (chartState.monthly) {
+    chartState.monthly.destroy();
+  }
+
+  if (!window.Chart) {
+    const fallback = document.createElement('div');
+    fallback.className = 'line-chart-placeholder';
+    fallback.textContent = labels.map((label, idx) => `${label}: ${formatMoney(values[idx])}`).join(' | ');
+    canvas.replaceWith(fallback);
+    return;
+  }
+
+  chartState.monthly = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Collections',
+        data: values,
+        borderRadius: 8,
+        backgroundColor: 'rgba(20, 184, 166, 0.75)',
+        borderColor: 'rgba(56, 189, 248, 0.95)',
+        borderWidth: 1.5,
+        hoverBackgroundColor: 'rgba(56, 189, 248, 0.9)',
+        maxBarThickness: 46
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label(context) {
+              return `Collected: ${formatMoney(context.parsed.y)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#94A3B8' },
+          grid: { display: false }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: {
+            color: '#94A3B8',
+            callback(value) {
+              return `$${Number(value).toLocaleString()}`;
+            }
+          },
+          grid: { color: 'rgba(148, 163, 184, 0.2)' }
+        }
+      }
+    }
+  });
+}
+
+function renderAgeingDistribution(invoices) {
+  const canvas = document.getElementById('ageingDistributionChart');
+  const legend = document.getElementById('ageingLegend');
+  if (!canvas || !legend) return;
+
+  const totals = {
+    current: 0,
+    days31to60: 0,
+    days61to90: 0,
+    over90: 0
+  };
+
+  invoices.forEach((invoice) => {
+    const outstanding = Math.max(0, toNumber(invoice.amount) - toNumber(invoice.paid));
+    if (outstanding <= 0) return;
+    const bucket = getAgeingBucket(getDaysOverdue(invoice.dueDate));
+    totals[bucket] += outstanding;
+  });
+
+  const values = [totals.current, totals.days31to60, totals.days61to90, totals.over90];
+  const labels = ['Current', '31-60d', '61-90d', '90+d'];
+  const grandTotal = values.reduce((sum, value) => sum + value, 0);
+
+  const percentages = values.map((value) => (grandTotal > 0 ? (value / grandTotal) * 100 : 0));
+  legend.innerHTML = [
+    `<span><span class="legend-swatch current"></span>Current ${percentages[0].toFixed(0)}%</span>`,
+    `<span><span class="legend-swatch days30"></span>31-60d ${percentages[1].toFixed(0)}%</span>`,
+    `<span><span class="legend-swatch days60"></span>61-90d ${percentages[2].toFixed(0)}%</span>`,
+    `<span><span class="legend-swatch days90"></span>90+d ${percentages[3].toFixed(0)}%</span>`
+  ].join('');
+
+  if (chartState.ageing) {
+    chartState.ageing.destroy();
+  }
+
+  if (!window.Chart) {
+    canvas.parentElement.innerHTML = `<div class="line-chart-placeholder">${labels.map((label, index) => `${label}: ${formatMoney(values[index])}`).join(' | ')}</div>`;
+    return;
+  }
+
+  chartState.ageing = new Chart(canvas, {
+    type: 'pie',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: [
+          'rgba(56, 189, 248, 0.85)',
+          'rgba(20, 184, 166, 0.85)',
+          'rgba(249, 115, 22, 0.85)',
+          'rgba(240, 67, 63, 0.85)'
+        ],
+        borderColor: 'rgba(15, 23, 42, 0.95)',
+        borderWidth: 3,
+        hoverOffset: 10
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label(context) {
+              const value = context.parsed || 0;
+              const share = grandTotal > 0 ? ((value / grandTotal) * 100).toFixed(1) : '0.0';
+              return `${context.label}: ${formatMoney(value)} (${share}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
 }
 
 function renderOutstandingTrend(invoices) {
@@ -335,6 +479,7 @@ function renderReport() {
   renderCustomerTable(customerData);
   renderInvoicesTable(filteredInvoices);
   renderTopCustomers(customerData);
+  renderAgeingDistribution(filteredInvoices);
   renderMonthlyCollection(reportState.payments);
   renderOutstandingTrend(filteredInvoices);
   renderCollectionPerformance(filteredInvoices, reportState.payments);
@@ -357,7 +502,17 @@ function showLoadError(message) {
   }
   const monthlyChart = document.getElementById('monthlyCollectionChart');
   if (monthlyChart) {
-    monthlyChart.innerHTML = '<div class="bar" style="height:0%" title="No data"></div>';
+    const parent = monthlyChart.parentElement;
+    if (parent) {
+      parent.innerHTML = '<div class="line-chart-placeholder">No chart data available.</div>';
+    }
+  }
+  const ageingChart = document.getElementById('ageingDistributionChart');
+  if (ageingChart) {
+    const parent = ageingChart.parentElement;
+    if (parent) {
+      parent.innerHTML = '<div class="line-chart-placeholder">No chart data available.</div>';
+    }
   }
   setText('outstandingTrend', 'Unable to load trend data.');
   setText('collectionPerformance', 'Unable to load performance data.');

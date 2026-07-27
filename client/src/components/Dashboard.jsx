@@ -1,5 +1,19 @@
 import React, { useEffect, useState } from 'react'
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
+} from 'recharts'
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:1573';
 
@@ -13,6 +27,8 @@ export default function Dashboard() {
   });
   const [ageing, setAgeing] = useState({ d0to30: 0, d31to60: 0, d61to90: 0, d90plus: 0 });
   const [recentInvoices, setRecentInvoices] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -24,12 +40,19 @@ export default function Dashboard() {
         setLoading(true);
         setError('');
 
-        const response = await fetch(`${API_BASE}/api/dashboard/aggregates`);
-        if (!response.ok) {
+        const [dashboardRes, invoicesRes, paymentsRes] = await Promise.all([
+          fetch(`${API_BASE}/api/dashboard/aggregates`),
+          fetch(`${API_BASE}/api/invoices`),
+          fetch(`${API_BASE}/api/payments`)
+        ]);
+
+        if (!dashboardRes.ok || !invoicesRes.ok || !paymentsRes.ok) {
           throw new Error('Failed to load dashboard data');
         }
 
-        const payload = await response.json();
+        const payload = await dashboardRes.json();
+        const invoicesData = await invoicesRes.json();
+        const paymentsData = await paymentsRes.json();
 
         if (!active) return;
 
@@ -42,6 +65,8 @@ export default function Dashboard() {
         });
         setAgeing(payload.ageing || { d0to30: 0, d31to60: 0, d61to90: 0, d90plus: 0 });
         setRecentInvoices(Array.isArray(payload.recentInvoices) ? payload.recentInvoices : []);
+        setInvoices(Array.isArray(invoicesData) ? invoicesData : []);
+        setPayments(Array.isArray(paymentsData) ? paymentsData : []);
       } catch (err) {
         if (!active) return;
         setError(err.message || 'Unable to load dashboard data');
@@ -79,6 +104,75 @@ export default function Dashboard() {
     { name: 'Outstanding', value: 100 - collectionRateValue }
   ];
   const collectionRateColors = ['#22c55e', '#e5e7eb'];
+
+  const topCustomerOutstanding = React.useMemo(() => {
+    const buckets = {};
+
+    invoices.forEach((invoice) => {
+      const customer = invoice.customerName || invoice.customer || 'Unknown';
+      const total = Number(invoice.amount || invoice.total || 0);
+      const paid = Number(invoice.paid || 0);
+      const outstanding = Math.max(0, total - paid);
+
+      if (!buckets[customer]) {
+        buckets[customer] = 0;
+      }
+      buckets[customer] += outstanding;
+    });
+
+    return Object.entries(buckets)
+      .map(([name, amount]) => ({ name, amount: Number(amount.toFixed(2)) }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5);
+  }, [invoices]);
+
+  const ageingPieData = React.useMemo(() => {
+    return [
+      { name: '0-30 Days', value: Number(ageing.d0to30 || 0) },
+      { name: '31-60 Days', value: Number(ageing.d31to60 || 0) },
+      { name: '61-90 Days', value: Number(ageing.d61to90 || 0) },
+      { name: '90+ Days', value: Number(ageing.d90plus || 0) }
+    ];
+  }, [ageing]);
+
+  const ageingPieColors = ['#22c55e', '#38bdf8', '#f59e0b', '#ef4444'];
+
+  const monthlyTrend = React.useMemo(() => {
+    const labels = [];
+    const slots = [];
+    const now = new Date();
+
+    for (let i = 5; i >= 0; i -= 1) {
+      const marker = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${marker.getFullYear()}-${marker.getMonth()}`;
+      labels.push(marker.toLocaleString(undefined, { month: 'short' }));
+      slots.push({ key, month: labels[labels.length - 1], billed: 0, collected: 0 });
+    }
+
+    invoices.forEach((invoice) => {
+      const issueDate = new Date(invoice.issueDate || invoice.createdAt || '');
+      if (Number.isNaN(issueDate.getTime())) return;
+      const key = `${issueDate.getFullYear()}-${issueDate.getMonth()}`;
+      const slot = slots.find((item) => item.key === key);
+      if (!slot) return;
+      slot.billed += Number(invoice.amount || invoice.total || 0);
+    });
+
+    payments.forEach((payment) => {
+      const paymentDate = new Date(payment.paymentDate || payment.date || payment.createdAt || '');
+      if (Number.isNaN(paymentDate.getTime())) return;
+      const key = `${paymentDate.getFullYear()}-${paymentDate.getMonth()}`;
+      const slot = slots.find((item) => item.key === key);
+      if (!slot) return;
+      slot.collected += Number(payment.amount || 0);
+    });
+
+    return slots.map((slot) => ({
+      month: slot.month,
+      billed: Number(slot.billed.toFixed(2)),
+      collected: Number(slot.collected.toFixed(2))
+    }));
+  }, [invoices, payments]);
 
   return (
     <div className="space-y-6">
@@ -192,6 +286,80 @@ export default function Dashboard() {
             <span className="inline-block w-3 h-3 rounded-full bg-gray-200" />
             <span>Outstanding</span>
           </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="bg-card p-6 rounded border border-border">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold">Monthly Billed vs Collected</h3>
+            <span className="text-sm text-textSecondary">Last 6 months</span>
+          </div>
+          <div className="w-full h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={monthlyTrend} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
+                <XAxis dataKey="month" stroke="#94a3b8" />
+                <YAxis stroke="#94a3b8" />
+                <Tooltip formatter={(value) => formatMoney(value)} />
+                <Legend />
+                <Line type="monotone" dataKey="billed" stroke="#38bdf8" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+                <Line type="monotone" dataKey="collected" stroke="#22c55e" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="bg-card p-6 rounded border border-border">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold">Top Customers by Outstanding</h3>
+            <span className="text-sm text-textSecondary">Highest balances</span>
+          </div>
+          <div className="w-full h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={topCustomerOutstanding} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(148,163,184,0.2)" />
+                <XAxis dataKey="name" stroke="#94a3b8" tick={{ fontSize: 12 }} interval={0} angle={-8} textAnchor="end" height={50} />
+                <YAxis allowDecimals={false} stroke="#94a3b8" />
+                <Tooltip formatter={(value) => [formatMoney(value), 'Outstanding']} />
+                <Bar dataKey="amount" radius={[8, 8, 0, 0]}>
+                  {topCustomerOutstanding.map((item, index) => (
+                    <Cell key={`${item.name}-${index}`} fill={index % 2 === 0 ? '#38bdf8' : '#22c55e'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-card p-6 rounded border border-border">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold">Ageing Composition</h3>
+          <span className="text-sm text-textSecondary">Outstanding by bucket</span>
+        </div>
+
+        <div className="w-full h-72">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={ageingPieData}
+                dataKey="value"
+                nameKey="name"
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={100}
+                paddingAngle={2}
+              >
+                {ageingPieData.map((entry, index) => (
+                  <Cell key={entry.name} fill={ageingPieColors[index % ageingPieColors.length]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value) => formatMoney(value)} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
