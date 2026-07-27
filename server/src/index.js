@@ -7,7 +7,10 @@ const { sequelize } = require('./models');
 const app = express();
 const PORT = process.env.PORT || 1573;
 
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 app.use(bodyParser.json());
 
 // Routes
